@@ -157,6 +157,13 @@ int main(int argc, char* argv[]) {
 	std::string impl = argc == 5 ? argv[4] : "*";
 	assert (n > 0 && m > 0 && k > 0);
 
+	// We allocate a small block of memory on GPU here to initialize the
+	// CUDA context. If we does not do this and the user hasn't enabled
+	// GPU's persistent mode, then the first CUDA call will take a long
+	// time to finish
+	int* dummy;
+	cudaMalloc(&dummy, sizeof(int));
+	
 	std::vector<std::pair<std::string, double>> results;
 	for (auto gemm_impl : gemm_impls) {
 		if (impl == "*" || gemm_impl.name == impl) {
