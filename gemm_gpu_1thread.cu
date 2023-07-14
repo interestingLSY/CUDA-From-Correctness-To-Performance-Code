@@ -13,10 +13,13 @@ void gemm_gpu_1thread_kernel(
 	const int k
 ) {
 	for (int i = 0; i < n; ++i)
-		for (int j = 0; j < m; ++j)
+		for (int j = 0; j < m; ++j) {
+			int res = 0;
 			for (int l = 0; l < k; ++l) {
-				C[i * m + j] += A[i * k + l] * B[l * m + j];
+				res += A[i * k + l] * B[l * m + j];
 			}
+			C[i * m + j] = res;
+		}
 }
 
 void gemm_gpu_1thread(
