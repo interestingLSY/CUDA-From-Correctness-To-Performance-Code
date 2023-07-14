@@ -8,6 +8,7 @@
 
 #include "gemm_cpu_naive.h"
 #include "gemm_cpu_simd.h"
+#include "gemm_gpu_1thread.h"
 
 // gemm_impl_t - A function pointer type for gemm implementations
 typedef void (*gemm_impl_t)(
@@ -28,8 +29,21 @@ struct GemmImpl {
 // All GEMM implementations to benchmark
 std::vector<GemmImpl> gemm_impls = {
 	{ "cpu_naive", gemm_cpu_naive, false },
-	{ "cpu_simd", gemm_cpu_simd, false }
+	{ "cpu_simd", gemm_cpu_simd, false },
+	{ "gpu_1thread", gemm_gpu_1thread, true }
 };
+
+// cuda_sync_check_error - Sync with the CUDA device, check if there
+// is any error, and print the error message if there is any.
+void cuda_sync_check_error_helper(const char* filename, const int line) {
+	cudaDeviceSynchronize();
+	cudaError_t error = cudaGetLastError();
+	if (error != cudaSuccess) {
+		printf("CUDA error at %s:%d: %s\n", filename, line, cudaGetErrorString(error));
+		exit(1);
+	}
+}
+#define cuda_sync_check_error() cuda_sync_check_error_helper(__FILE__, __LINE__)
 
 constexpr int BENCHMARK_ROUNDS = 8;
 // benchmark_gemm_impl - Benchmark a gemm implementation, return the
@@ -69,7 +83,12 @@ double benchmark_gemm_impl(
 	// run_once: Run the gemm_impl once, and return its time usage (in microseconds (us))
 	std::function<long(void)> run_once = [&]() -> long {
 		if (gemm_impl.is_gpu) {
-			return -2;
+			cudaMemset(C_gpu, 0, sizeof(int) * n * m);
+			auto start = std::chrono::high_resolution_clock::now();
+			gemm_impl.impl(C_gpu, A_gpu, B_gpu, n, m, k);
+			cuda_sync_check_error();
+			auto end = std::chrono::high_resolution_clock::now();
+			return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 		} else {
 			memset(C, 0, sizeof(int) * n * m);
 			auto start = std::chrono::high_resolution_clock::now();
@@ -85,16 +104,16 @@ double benchmark_gemm_impl(
 
 	// Verift its correctness
 	if (gemm_impl.is_gpu) {
-	} else {
-		for (int i = 0; i < n * m; ++i) {
-			if (C[i] != C_ref[i]) {
-				printf("Verification failed!\n");
-				printf("C[%d, %d] = %d, C_ref[%d, %d] = %d\n", i / m, i % m, C[i], i / m, i % m, C_ref[i]);
-				return -1;
-			}
-		}
-		std::cout << "Verification passed!" << std::endl;
+		cudaMemcpy(C, C_gpu, sizeof(int) * n * m, cudaMemcpyDeviceToHost);
 	}
+	for (int i = 0; i < n * m; ++i) {
+		if (C[i] != C_ref[i]) {
+			printf("Verification failed!\n");
+			printf("C[%d, %d] = %d, C_ref[%d, %d] = %d\n", i / m, i % m, C[i], i / m, i % m, C_ref[i]);
+			return -1;
+		}
+	}
+	std::cout << "Verification passed!" << std::endl;
 
 	// Warm up again since correct verification may corrupt cache
 	printf("Warming up (again)...\n");
