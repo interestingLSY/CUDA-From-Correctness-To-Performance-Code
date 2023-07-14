@@ -1,8 +1,8 @@
 CC = nvcc
 CXXFLAGS = -O3
 
-DEPS = gemm_cpu_naive.h gemm_cpu_simd.h gemm_gpu_1thread.h
-OBJS = gemm_cpu_naive.o gemm_cpu_simd.o gemm_test.o gemm_gpu_1thread.o
+DEPS = gemm_cpu_naive.h gemm_cpu_simd.h gemm_gpu_1thread.h gemm_gpu_mult_thread.h
+OBJS = gemm_cpu_naive.o gemm_cpu_simd.o gemm_test.o gemm_gpu_1thread.o gemm_gpu_mult_thread.o
 
 .PHONY: all clean
 
