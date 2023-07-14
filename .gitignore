@@ -1,0 +1,3 @@
+/.vscode
+/gemm_test
+*.o
