@@ -146,7 +146,7 @@ double benchmark_gemm_impl(
 
 int main(int argc, char* argv[]) {
 	if (argc != 4 && argc != 5) {
-		printf("Usage: %s <n> <m> <k> [algorithm]\n", argv[0]);
+		printf("Usage: %s <n> <m> <k> [implementation]\n", argv[0]);
 		exit(1);
 	}
 
@@ -154,12 +154,12 @@ int main(int argc, char* argv[]) {
 	int n = atoi(argv[1]);
 	int m = atoi(argv[2]);
 	int k = atoi(argv[3]);
-	std::string algorithm = argc == 5 ? argv[4] : "*";
+	std::string impl = argc == 5 ? argv[4] : "*";
 	assert (n > 0 && m > 0 && k > 0);
 
 	std::vector<std::pair<std::string, double>> results;
 	for (auto gemm_impl : gemm_impls) {
-		if (algorithm == "*" || gemm_impl.name == algorithm) {
+		if (impl == "*" || gemm_impl.name == impl) {
 			printf("----------------\n");
 			printf("Benchmarking %s...\n", gemm_impl.name.c_str());
 			double avg_time_usage = benchmark_gemm_impl(gemm_impl, n, m, k);
