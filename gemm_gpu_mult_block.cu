@@ -16,11 +16,9 @@ void gemm_gpu_mult_block_kernel(
 ) {
 	const int i = threadIdx.x;
 	const int j = blockIdx.x;
-	int res = 0;
 	for (int l = 0; l < k; ++l) {
-		res += A[i * k + l] * B[l * m + j];
+		C[i * m + j] += A[i * k + l] * B[l * m + j];
 	}
-	C[i * m + j] = res;
 }
 
 void gemm_gpu_mult_block(

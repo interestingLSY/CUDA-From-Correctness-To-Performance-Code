@@ -11,6 +11,7 @@
 #include "gemm_gpu_1thread.h"
 #include "gemm_gpu_mult_thread.h"
 #include "gemm_gpu_mult_block.h"
+#include "gemm_gpu_mult_block_no_restrict.h"
 
 // gemm_impl_t - A function pointer type for gemm implementations
 typedef void (*gemm_impl_t)(
@@ -34,7 +35,8 @@ std::vector<GemmImpl> gemm_impls = {
 	{ "cpu_simd", gemm_cpu_simd, false },
 	{ "gpu_1thread", gemm_gpu_1thread, true },
 	{ "gpu_mult_thread", gemm_gpu_mult_thread, true },
-	{ "gpu_mult_block", gemm_gpu_mult_block, true }
+	{ "gpu_mult_block", gemm_gpu_mult_block, true },
+	{ "gpu_mult_block_no_restrict", gemm_gpu_mult_block_no_restrict, true }
 };
 
 // cuda_sync_check_error - Sync with the CUDA device, check if there
